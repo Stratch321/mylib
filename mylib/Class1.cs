@@ -62,7 +62,7 @@ namespace mylib
             Worksheet excelsheet = wb.Sheets[1];
             Range exRange = excelsheet.UsedRange;
 
-            int rows = 
+            //int rows = 
         }
     }
 }
