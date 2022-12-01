@@ -55,7 +55,7 @@ namespace mylib
             Application excel = new Application();
             if (excel == null)
             {
-                throw "Excel is not installed";
+                throw new "Excel is not installed";
             }
 
             Workbook wb = excel.Workbooks.Open(@"/tabledata.xlsx");
