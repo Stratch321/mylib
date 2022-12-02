@@ -4,6 +4,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Update.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace mylib
 {
@@ -74,14 +75,35 @@ namespace mylib
             var ExApp = new Excel.Application();
             if (ExApp == null)
             {
-                //TODO:Кинуть сюда экспешн
+                throw new Exception("На этом компьютере не установлен Excel. Установите Excel  и повторите попытку");
             }
 
-            Excel.Workbook wb = ExApp.Workbooks.Open(@"/tabledata.xlsx");
-            Excel._Worksheet excelsheet = wb.Sheets[1];
-            Excel.Range exRange = excelsheet.UsedRange;
+            Excel.Workbook ExWb = ExApp.Workbooks.Open(@"C:\bhyujk.xlsx", null, false);
+            Excel._Worksheet ExWs = ExWb.Worksheets[1];
+            Excel.Range ExRg = ExWs.UsedRange;
 
-            //int rows = 
+            int rowCount = ExRg.Rows.Count;
+            int columnCount = ExRg.Columns.Count;
+
+            for (int i = 0; i <= columnCount; i++)
+            {
+                for (int j = 0; j <= rowCount; j++)
+                {
+                    if (ExRg.Cells[i, j] != null && ExRg.Cells[i, j].Value2 != null)
+                    {
+                        Console.WriteLine(ExRg.Cells[i, j].Value2.ToString() + "\t");
+                    }    
+                    
+                }
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            Marshal.ReleaseComObject(ExWs);
+            Marshal.ReleaseComObject(ExRg);
+
+            ExWb.Close();
+            Marshal.ReleaseComObject(ExApp);
         }
 
 
@@ -91,7 +113,7 @@ namespace mylib
             var ExApp = new Excel.Application();
             if (ExApp == null)
             {
-                //TODO: Кинуть сюда экспешн
+                throw new Exception("На этом компьютере не установлен Excel. Установите Excel  и повторите попытку");
             }
 
             
