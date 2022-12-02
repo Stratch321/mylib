@@ -1,9 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Runtime.InteropServices;
-using Microsoft.Office.Interop.Excel;
+using Excel = Microsoft.Office.Interop.Excel;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Update.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
+
 namespace mylib
 {
-    public class Phones
+    
+    public class Phone
     {
         public int Id { get; set; }
         public string Product { get; set; }
@@ -13,38 +18,52 @@ namespace mylib
     }
     public class AppConn : DbContext
     {
-        public DbSet<Phones> phones { get; set; }
-        public AppConn()
+        public bool iscreated = false;
+        public DbSet<Phone> Phones => Set<Phone>();
+        public  AppConn()
         {
-            Database.EnsureCreated();
+            if (Database.EnsureCreated() == true)
+            {
+                iscreated = true;
+            }
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)
         {
             builder.UseSqlite("Data Source = appdb.db");
+            builder.EnableSensitiveDataLogging();
         }
     }
 
     public class sqlwork
     {
-
-        public void dbcreate()
+        public void Dbcreate()
         {
-            using (AppConn db = new AppConn())
-            {
-                Phones model1 = new Phones { Id = 0, Product = "A51s", Company = "Samsung", Price = 20000, Count = 40 };
-                Phones model2 = new Phones { Id = 1, Product = "5i", Company = "Realme", Price = 11000, Count = 150 };
-                Phones model3 = new Phones { Id = 2, Product = "7 pro", Company = "Realme", Price = 17500, Count = 70 };
-                Phones model4 = new Phones { Id = 3, Product = "3310", Company = "Nokia", Price = 1, Count = 1 };
-                Phones model5 = new Phones { Id = 4, Product = "Note 7", Company = "Samsung", Price = 50000, Count = 100 };
+           using (AppConn db = new AppConn())
+           {
+                if (db.iscreated == true)
+                {
+                    Phone model1 = new Phone { Product = "A51s", Company = "Samsung", Price = 20000, Count = 40 };
+                    Phone model2 = new Phone { Product = "5i", Company = "Realme", Price = 11000, Count = 150 };
+                    Phone model3 = new Phone { Product = "7 pro", Company = "Realme", Price = 17500, Count = 70 };
+                    Phone model4 = new Phone { Product = "3310", Company = "Nokia", Price = 1, Count = 1 };
+                    Phone model5 = new Phone { Product = "Note 7", Company = "Samsung", Price = 50000, Count = 100 };
 
-                db.phones.Add(model1);
-                db.phones.Add(model2);
-                db.phones.Add(model3);
-                db.phones.Add(model4);
-                db.phones.Add(model5);
-                db.SaveChanges();
-            }
+                    db.Phones.Add(model1);
+                    db.Phones.Add(model2);
+                    db.Phones.Add(model3);
+                    db.Phones.Add(model4);
+                    db.Phones.Add(model5);
+                    db.SaveChanges();
+                }
+           }
+        }
+
+        public List<Phone> DbShowInfo()
+        {
+            AppConn db = new AppConn();
+            var result = db.Phones.ToList();
+            return result;
         }
     }
 
@@ -52,17 +71,59 @@ namespace mylib
     {
         public void ExcelReader()
         {
-            Application excel = new Application();
-            if (excel == null)
+            var ExApp = new Excel.Application();
+            if (ExApp == null)
             {
-                throw new "Excel is not installed";
+                //TODO:Кинуть сюда экспешн
             }
 
-            Workbook wb = excel.Workbooks.Open(@"/tabledata.xlsx");
-            Worksheet excelsheet = wb.Sheets[1];
-            Range exRange = excelsheet.UsedRange;
+            Excel.Workbook wb = ExApp.Workbooks.Open(@"/tabledata.xlsx");
+            Excel._Worksheet excelsheet = wb.Sheets[1];
+            Excel.Range exRange = excelsheet.UsedRange;
 
             //int rows = 
+        }
+
+
+
+        public void ExcelWriter()
+        {
+            var ExApp = new Excel.Application();
+            if (ExApp == null)
+            {
+                //TODO: Кинуть сюда экспешн
+            }
+
+            
+
+            ExApp.Visible = true;
+
+            ExApp.Workbooks.Add();
+
+            Excel._Worksheet worksheet = (Excel.Worksheet)ExApp.ActiveSheet;
+
+            using (AppConn db = new AppConn())
+            {
+               var res = db.Phones.ToList();
+                int row = 1;
+
+
+                worksheet.Cells[1, "A"] = "ID";
+                worksheet.Cells[1, "B"] = "Product";
+                worksheet.Cells[1, "C"] = "Company";
+                worksheet.Cells[1, "D"] = "Price";
+                worksheet.Cells[1, "E"] = "Count";
+
+                foreach (Phone item in res)
+                {
+                    row++;
+                    worksheet.Cells[row, "A"] = item.Id;
+                    worksheet.Cells[row, "B"] = item.Product;
+                    worksheet.Cells[row, "C"] = item.Company;
+                    worksheet.Cells[row, "D"] = item.Price;
+                    worksheet.Cells[row, "E"] = item.Count;
+                }
+            }
         }
     }
 }
